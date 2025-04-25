@@ -1,10 +1,15 @@
 package com.project.project.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -45,5 +50,8 @@ public String getEmail(){return email;}
     }
     public void setId(Long id){this.id = id;
     }   
-
+@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+private List<Reservation> reservation = new ArrayList<>();
+public List<Reservation> getReservation(){return reservation;}
+public void setReservation(List<Reservation> reservation){this.reservation=reservation;}
 }
