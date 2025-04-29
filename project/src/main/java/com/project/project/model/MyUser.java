@@ -39,8 +39,6 @@ public class MyUser {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reservation> reservations = new ArrayList<>();
 
-    // Getters and Setters
-
     public Long getId() {
         return id;
     }
