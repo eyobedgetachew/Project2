@@ -1,5 +1,9 @@
 package com.project.project.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,6 +14,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @Table(name = "menu")
 public class Menu {
 
@@ -20,6 +25,7 @@ public class Menu {
 
     @OneToOne(optional = false)
     @JoinColumn(name = "place_id", referencedColumnName = "id", nullable = false, unique = true)
+    @JsonBackReference("place-menu")
     private Place place;
 
     @Column(name = "item", nullable = false)

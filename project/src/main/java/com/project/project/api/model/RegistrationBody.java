@@ -1,11 +1,41 @@
 package com.project.project.api.model;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+
 public class RegistrationBody {
-    
+   
+    @NotNull
+    @NotBlank
+    @Size(min = 3,max = 69, message = "User name must be between 3-69 characters")
+   
     private String username;
+   
+    @NotNull
+    @NotBlank
+   @Size(min = 8,max = 69, message = "Password must be between 8-69 characters")
+    // Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one digit.
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d]{8,}$",
+             message = "Password must contain at least one uppercase letter, one lowercase letter, and one digit.")
     private String password;
+   
+    @NotNull
+    @NotBlank
+    @Pattern(
+    regexp = "^[\\w.%+-]+@[\\w.-]+\\.[A-Za-z]{2,6}$",
+    message = "Invalid email address")
+    @Email
     private String email;
+
+    @NotNull
+    @NotBlank
     private String firstname;
+   
+    @NotNull
+    @NotBlank
     private String lastname;
 
 public String getUsername(){return username;}

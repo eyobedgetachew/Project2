@@ -3,6 +3,10 @@ package com.project.project.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,6 +18,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @Table(name = "Place")
 public class Place {
 
@@ -29,9 +34,11 @@ public class Place {
     private String description;
 
     @OneToOne(mappedBy = "place", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @JsonManagedReference("place-menu")
     private Menu menu;
 
     @OneToMany(mappedBy = "place", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("place-reservations")
     private List<Reservation> reservations = new ArrayList<>();
 
     // Getters and setters
