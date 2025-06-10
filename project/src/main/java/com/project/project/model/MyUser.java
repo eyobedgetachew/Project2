@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -45,6 +46,29 @@ public class MyUser {
 
     @Column(name = "email_verified", nullable = false)
     private boolean emailVerified = false;
+    @Column(name = "role", nullable = false)
+    private String role = "USER";
+
+    @ElementCollection
+@Column(name = "interest")
+private List<String> interest= new ArrayList<>();
+ 
+
+    public List<String> getInterests() {
+        return interest;
+    }
+    public void setInterests(List<String> interests) {
+        this.interest = interests;
+    }
+
+    public String getRole() {
+        return this.role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
 
     @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)

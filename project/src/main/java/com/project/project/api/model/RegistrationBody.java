@@ -1,5 +1,7 @@
 package com.project.project.api.model;
 
+import java.util.List;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -38,6 +40,22 @@ public class RegistrationBody {
     @NotBlank
     private String lastname;
 
+
+
+
+    @NotBlank(message = "Role is required")
+    private String role;
+    private List<String> interests;
+    
+    
+    
+    
+    public List<String> getInterests() {return interests;}
+    public void setInterests(List<String> interests) {this.interests = interests;}
+    
+    
+public String getRole() {return role;}
+public void setRole(String role) {this.role = role;}
 public String getUsername(){return username;}
 public void setUsername(String username){this.username=username;}
 public String getPassword(){return password;}

@@ -49,6 +49,19 @@ public class UserService {
         user.setLastName(registrationBody.getLastName());
         user.setPassword(encryptionService.encryptPassword(registrationBody.getPassword()));
         user.setUsername(registrationBody.getUsername());
+
+String requestedRole = registrationBody.getRole().toUpperCase();
+    if (!requestedRole.equals("USER") && !requestedRole.equals("OWNER")) {
+        throw new IllegalArgumentException("Invalid role: must be USER or OWNER");
+    }
+    user.setRole(requestedRole);
+
+    if (registrationBody.getInterests() != null) {
+        user.setInterests(registrationBody.getInterests());
+    }
+
+
+
          MyUser savedUser = myUserDAO.save(user);
          VerificationToken verificationToken = createVerificationToken(savedUser);
         verificationTokenDAO.save(verificationToken);
