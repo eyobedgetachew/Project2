@@ -78,11 +78,14 @@
 			<artifactId>java-jwt</artifactId>
 			<version>4.2.1</version>
 		</dependency>
-		<dependency>
-			<groupId>com.microsoft.sqlserver</groupId>
-			<artifactId>mssql-jdbc</artifactId>
-			<scope>runtime</scope>
-		</dependency>
+		
+    <dependency>
+        <groupId>com.cloudinary</groupId>
+        <artifactId>cloudinary-http44</artifactId>
+        <version>1.38.0</version> </dependency>
+
+
+    
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>

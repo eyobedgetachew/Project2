@@ -23,10 +23,10 @@ public class Menu {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @OneToOne(optional = false)
-    @JoinColumn(name = "place_id", referencedColumnName = "id", nullable = false, unique = true)
-    @JsonBackReference("place-menu")
-    private Place place;
+@OneToOne(optional = false)
+@JoinColumn(name = "place_id", referencedColumnName = "id", nullable = false, unique = true)
+@JsonBackReference("place-menu")
+private Place place;
 
     @Column(name = "item", nullable = false)
     private String item;

@@ -11,16 +11,19 @@ import jakarta.annotation.PostConstruct;
 
 @Service
 public class JWTService {
-    
+
     @Value("${jwt.algorithm.key}")
     private String algorithmKey;
     @Value("${jwt.issuer}")
     private String issuer;
     @Value("${jwt.expiryInSeconds}")
     private int expiryInSeconds;
+
     private Algorithm algorithm;
+
     private static final String USERNAME_KEY = "USERNAME";
     private static final String EMAIL_KEY = "EMAIL";
+    private static final String ROLE_KEY = "ROLES"; // <-- NEW: Constant for the role claim key
 
     @PostConstruct
     public void PostConstruct(){
@@ -30,11 +33,13 @@ public class JWTService {
     public String generateJWt(MyUser user){
         return JWT.create()
                 .withIssuer(issuer)
-                .withClaim("USERNAME", user.getUsername())
+                .withClaim(USERNAME_KEY, user.getUsername())
+                // <-- NEW: Add the user's role as a claim
+                .withClaim(ROLE_KEY, "ROLE_" + user.getRole().toUpperCase()) // Ensure role is uppercase and prefixed
                 .withExpiresAt(new java.util.Date(System.currentTimeMillis() + expiryInSeconds * 1000))
                 .sign(algorithm);
-
     }
+
     public String generateVerificationJWT(MyUser user) {
         return JWT.create()
                 .withIssuer(issuer)
@@ -42,6 +47,10 @@ public class JWTService {
                 .withExpiresAt(new java.util.Date(System.currentTimeMillis() + expiryInSeconds * 1000))
                 .sign(algorithm);
     }
-    public  String getUsername(String token) {
-        return JWT.decode(token).getClaim(USERNAME_KEY).asString();}
+
+    public String getUsername(String token) {
+        return JWT.decode(token).getClaim(USERNAME_KEY).asString();
+    }
+
+   
 }
