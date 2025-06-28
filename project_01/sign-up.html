@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Up | FoodLovers</title>
+  <link rel="stylesheet" href="sign-up.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body class="mama">
+  <div class="container">
+    <div class="signup-form">
+      <h1>Create an Account</h1>
+      <p>Join us today and explore delicious recipes!</p>
+
+      <form class="form" action="user,p.html">
+        <div class="flex">
+          <label>
+            <input class="input" type="text" name="firstName" required />
+            <span>First Name</span>
+          </label>
+
+          <label>
+            <input class="input" type="text" name="lastName" required />
+            <span>Last Name</span>
+          </label>
+        </div>
+
+        <!-- Role Dropdown (clean & accessible version) -->
+        <label>
+          <select class="input" name="role" required>
+            <option value="" disabled selected>Select Role</option>
+            <option value="user">User</option>
+            <option value="owner">Owner</option>
+          </select>
+          
+        </label>
+
+        <label>
+          <input class="input" type="email" name="email" required />
+          <span>Email</span>
+        </label>
+
+        <label>
+          <input class="input" type="password" name="password" required />
+          <span>Password</span>
+        </label>
+
+        <label>
+          <input class="input" type="password" name="confirmPassword" required />
+          <span>Confirm Password</span>
+        </label>
+
+        <button class="submit" type="submit"><a href="user,p.html">Next</a></button>
+        <p class="signin">Already have an account? <a href="login.html">Go back</a></p>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
