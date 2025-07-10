@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Post Your Restaurant | FoodLovers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <style>
+        body {
+            background-color: #0a0a0a; /* Deep dark background for consistency */
+            color: #e0e0e0; /* Light text */
+            font-family: 'Poppins', sans-serif; /* Assuming Poppins is your preferred font */
+        }
+        #map {
+            height: 300px;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 0.5rem;
+        }
+        /* Style for form inputs */
+        input[type="text"],
+        input[type="number"],
+        input[type="tel"],
+        input[type="email"],
+        input[type="time"],
+        select,
+        textarea {
+            background-color: #2a2a2a; /* Darker input background */
+            border-color: #444444; /* Darker border */
+            color: #e0e0e0; /* Light text color */
+        }
+        input::placeholder,
+        textarea::placeholder {
+            color: #888888; /* Lighter placeholder text */
+        }
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: #fbbf24; /* Amber-400 focus ring */
+            box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.5); /* Amber-400 shadow */
+        }
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23d1d5db'%3E%3Cpath d='M7 7l3 3 3-3' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+        /* Style for media preview */
+        #mediaPreviewContainer {
+            display: none; /* Hidden by default */
+            width: 100%;
+            height: 150px; /* Fixed height for preview */
+            overflow: hidden;
+            border-radius: 0.5rem; /* rounded-lg */
+            margin-top: 1rem;
+            position: relative;
+            background-color: #3f3f46; /* Neutral-700 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #mediaPreview {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain; /* Ensure media fits within bounds */
+        }
+        #removeMediaButton {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            border-radius: 50%;
+            padding: 0.25rem 0.5rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            line-height: 1;
+            border: none;
+        }
+    </style>
+</head>
+<body class="relative min-h-screen flex items-center justify-center p-6 overflow-hidden">
+    <div
+        class="absolute inset-0 bg-cover bg-center filter blur-md"
+        style="background-image: url('https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=1950&q=80');"
+    ></div>
+
+    <div class="relative z-10">
+        <a href="x.html" class="absolute top-4 left-4 z-10 p-2 bg-black bg-opacity-50 rounded-full hover:bg-opacity-75 transition-all">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+        </a>
+        <main class="bg-black bg-opacity-80 border-2 border-amber-500 shadow-lg rounded-lg max-w-xl w-full p-8 overflow-y-auto max-h-[95vh]">
+            <h1 class="text-3xl font-bold text-orange-600 mb-6 text-center">Post Your Restaurant</h1>
+
+            <form id="restaurantForm" class="space-y-6" enctype="multipart/form-data">
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-200 mb-1">Restaurant Name</label>
+                    <input type="text" id="name" name="name" required placeholder="E.g. The Spice House"
+                        class="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-orange-400 transition" />
+                </div>
+
+                <div>
+                    <label for="cuisine" class="block text-sm font-medium text-gray-200 mb-1">Cuisine Type</label>
+                    <select id="cuisine" name="cuisine" required
+                        class="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-orange-400 transition">
+                        <option value="" disabled selected>Select cuisine</option>
+                        <option>Indian</option>
+                        <option>Mexican</option>
+                        <option>Chinese</option>
+                        <option>Italian</option>
+                        <option>French</option>
+                        <option>Traditional</option>
+                        <option>Vegan</option>
+                        <option>Arabian</option>
+                        <option>Fast Food</option>
+                        <option>Sea Food</option>
+                        <option>Bar</option>
+                        <option>Hotel</option>
+                        <option>Butchery</option>
+                        <option>Lounge</option>
+                        <option>French</option>
+                        <option>Chineese</option>
+                        <option>Mexican</option>
+                        <option>Arabian</option>
+                        <option>Grill/Bistro</option>
+                        <option>Indian</option>
+                        <option>Korean</option>
+                        <option>Cafe</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="address" class="block text-sm font-medium text-gray-200 mb-1">Restaurant Address</label>
+                    <input type="text" id="address" name="address" required placeholder="E.g. Bole Road, Addis Ababa"
+                        class="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-orange-400 transition" />
+
+                    <label class="block text-sm font-medium text-gray-200 mt-4 mb-1">Location Preview (Drag marker if needed)</label>
+                    <div id="map"></div>
+                </div>
+
+                <div>
+                    <label for="contactInfo" class="block text-sm font-medium text-gray-200 mb-1">Contact Phone Number</label>
+                    <input type="tel" id="contactInfo" name="contactInfo" placeholder="E.g. +251912345678"
+                        class="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-orange-400 transition" />
+                </div>
+
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-200 mb-1">Email Address (Optional)</label>
+                    <input type="email" id="email" name="email" placeholder="E.g. info@yourrestaurant.com"
+                        class="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-orange-400 transition" />
+                </div>
+
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-200 mb-1">Description</label>
+                    <textarea id="description" name="description" rows="4"
+                        placeholder="Brief description about your restaurant..."
+                        class="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-orange-400 transition resize-none"
+                        required></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-200 mb-1">Menu Items</label>
+                    <div id="menu-items" class="space-y-3">
+                        <div class="space-y-2 border border-gray-600 rounded-md p-4 relative bg-gray-700">
+                            <div class="flex gap-3">
+                                <input type="text" name="menu_name[]" placeholder="Dish name" required
+                                    class="flex-1 border border-gray-500 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-400 bg-gray-800 text-white" />
+                                <input type="number" name="menu_price[]" placeholder="Price" min="0" step="0.01" required
+                                    class="w-24 border border-gray-500 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-400 bg-gray-800 text-white" />
+                                <button type="button" onclick="removeMenuItem(this)"
+                                    class="text-red-400 font-bold hover:text-red-600 absolute top-2 right-2"
+                                    aria-label="Remove menu item">X</button>
+                            </div>
+                            <div class="mt-2">
+                                <textarea name="menu_ingredients[]" placeholder="List ingredients (comma-separated)..." rows="2"
+                                    class="w-full border border-gray-500 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none bg-gray-800 text-white"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="addMenuItem()"
+                        class="mt-2 px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition">
+                        + Add More
+                    </button>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-200 mb-1">Opening Hours (e.g., 9:00 AM - 10:00 PM)</label>
+                    <div class="flex items-center gap-3">
+                        <input type="time" id="openTime" name="openTime" required
+                            class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-400 transition bg-gray-800 text-white" />
+                        <span class="text-gray-200">to</span>
+                        <input type="time" id="closeTime" name="closeTime" required
+                            class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-400 transition bg-gray-800 text-white" />
+                    </div>
+                </div>
+
+                <div class="flex flex-col items-center justify-center w-full">
+                    <label for="media-file-input" class="flex flex-col items-center justify-center w-full h-40 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-transparent hover:bg-gray-900 transition-colors">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                            <svg class="w-8 h-8 mb-4 text-orange-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                            </svg>
+                            <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">Click to upload</span> image or video</p>
+                            <p class="text-xs text-orange-500 ">JPG, PNG, GIF, MP4, MOV</p>
+                        </div>
+                        <input id="media-file-input" type="file" class="hidden" accept="image/*,video/*" />
+                    </label>
+                    <div id="mediaPreviewContainer" class="relative">
+                        <img id="imagePreview" src="#" alt="Media Preview" class="hidden media-preview-element" />
+                        <video id="videoPreview" src="#" controls class="hidden media-preview-element"></video>
+                        <button type="button" id="removeMediaButton" class="hidden">X</button>
+                    </div>
+                </div>
+
+                <!-- Status Message -->
+                <div id="statusMessage" class="mt-4 text-center text-sm font-medium"></div>
+                
+                <button type="submit"
+                    class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-md transition">
+                    Post Restaurant
+                </button>
+            </form>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+
+    <script>
+        const BACKEND_PORT = '8081'; // Define backend port
+
+        // Initialize the map
+        const map = L.map('map').setView([9.03, 38.74], 13); // Centered near Addis Ababa
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+        const marker = L.marker([9.03, 38.74], { draggable: true }).addTo(map);
+
+        let currentLat = 9.03;
+        let currentLng = 38.74;
+
+        marker.on('move', function(e) {
+            const latlng = marker.getLatLng();
+            currentLat = latlng.lat;
+            currentLng = latlng.lng;
+            console.log("Marker moved to Lat:", currentLat.toFixed(6), "Lon:", currentLng.toFixed(6));
+        });
+
+        // Add menu item functionality
+        function addMenuItem() {
+            const container = document.getElementById('menu-items');
+            const div = document.createElement('div');
+            div.classList.add('space-y-2', 'border', 'border-gray-600', 'rounded-md', 'p-4', 'relative', 'bg-gray-700', 'mt-3');
+
+            div.innerHTML = `
+                <div class="flex gap-3">
+                    <input type="text" name="menu_name[]" placeholder="Dish name" required
+                        class="flex-1 border border-gray-500 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-400 bg-gray-800 text-white" />
+                    <input type="number" name="menu_price[]" placeholder="Price" min="0" step="0.01" required
+                        class="w-24 border border-gray-500 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-400 bg-gray-800 text-white" />
+                    <button type="button" onclick="removeMenuItem(this)" class="text-red-400 font-bold hover:text-red-600 absolute top-2 right-2" aria-label="Remove menu item">X</button>
+                </div>
+                <div class="mt-2">
+                    <textarea name="menu_ingredients[]" placeholder="List ingredients (comma-separated)..." rows="2"
+                        class="w-full border border-gray-500 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none bg-gray-800 text-white"></textarea>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        // Remove menu item functionality
+        function removeMenuItem(button) {
+            button.closest('.space-y-2').remove();
+        }
+
+        // Media upload and preview logic
+        const mediaFileInput = document.getElementById('media-file-input');
+        const mediaPreviewContainer = document.getElementById('mediaPreviewContainer');
+        const imagePreview = document.getElementById('imagePreview');
+        const videoPreview = document.getElementById('videoPreview');
+        const removeMediaButton = document.getElementById('removeMediaButton');
+        let selectedMediaFile = null; // To store the selected file (image or video)
+
+        mediaFileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                selectedMediaFile = file;
+                const fileType = file.type;
+
+                // Hide both previews first
+                imagePreview.classList.add('hidden');
+                videoPreview.classList.add('hidden');
+                mediaPreviewContainer.style.display = 'none';
+                removeMediaButton.classList.add('hidden');
+
+                if (fileType.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        imagePreview.src = e.target.result;
+                        imagePreview.classList.remove('hidden');
+                        mediaPreviewContainer.style.display = 'flex';
+                        removeMediaButton.classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                } else if (fileType.startsWith('video/')) {
+                    videoPreview.src = URL.createObjectURL(file);
+                    videoPreview.classList.remove('hidden');
+                    mediaPreviewContainer.style.display = 'flex';
+                    removeMediaButton.classList.remove('hidden');
+                } else {
+                    showMessage('Unsupported file type. Please upload an image or video.', 'error');
+                    selectedMediaFile = null;
+                    mediaFileInput.value = ''; // Clear the input
+                }
+            } else {
+                selectedMediaFile = null;
+                imagePreview.classList.add('hidden');
+                videoPreview.classList.add('hidden');
+                mediaPreviewContainer.style.display = 'none';
+                removeMediaButton.classList.add('hidden');
+            }
+        });
+
+        removeMediaButton.addEventListener('click', () => {
+            selectedMediaFile = null;
+            mediaFileInput.value = ''; // Clear the input
+            imagePreview.classList.add('hidden');
+            videoPreview.classList.add('hidden');
+            mediaPreviewContainer.style.display = 'none';
+            removeMediaButton.classList.add('hidden');
+            showMessage(''); // Clear status message
+        });
+
+        // Status message display
+        const statusMessage = document.getElementById('statusMessage');
+        function showMessage(message, type = 'info') {
+            statusMessage.textContent = message;
+            statusMessage.className = `mt-4 text-center text-sm font-medium ${type === 'success' ? 'text-green-500' : type === 'error' ? 'text-red-500' : 'text-gray-400'}`;
+        }
+
+        // --- Handle Form Submission with Fetch API ---
+        document.getElementById('restaurantForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Prevent default form submission
+            showMessage('Posting restaurant...', 'info');
+
+            const form = event.target;
+            const formData = new FormData(); // Used for multipart/form-data
+
+            // 1. Get basic text fields
+            const name = document.getElementById('name').value;
+            const cuisine = document.getElementById('cuisine').value;
+            const description = document.getElementById('description').value;
+            const address = document.getElementById('address').value;
+            const contactInfo = document.getElementById('contactInfo').value;
+            const email = document.getElementById('email').value;
+
+            // 2. Combine Opening Hours
+            const openTime = document.getElementById('openTime').value;
+            const closeTime = document.getElementById('closeTime').value;
+            const openingHours = `${openTime} - ${closeTime}`;
+
+            // 3. Process ALL Menu Items
+            const menuItems = [];
+            const menuItemElements = document.querySelectorAll('#menu-items > div');
+            menuItemElements.forEach(itemDiv => {
+                const item = itemDiv.querySelector('input[name="menu_name[]"]').value;
+                const price = itemDiv.querySelector('input[name="menu_price[]"]').value;
+                const ingredients = itemDiv.querySelector('textarea[name="menu_ingredients[]"]').value;
+                
+                menuItems.push({
+                    item: item,
+                    price: price, // Send as string to match backend DTO
+                    ingredients: ingredients
+                });
+            });
+            
+            // Construct the PlaceCreateDTO object for the backend
+            const placeCreateDTO = {
+                name: name,
+                cuisine: cuisine,
+                openingHours: openingHours,
+                description: description,
+                address: address,
+                contactInfo: contactInfo,
+                email: email,
+                latitude: currentLat,
+                longitude: currentLng,
+                menuItems: menuItems // Send the array of menu items
+            };
+
+            // Append the DTO as a JSON Blob
+            formData.append('dto', new Blob([JSON.stringify(placeCreateDTO)], {
+                type: 'application/json'
+            }));
+
+            // 4. Append Image or Video File
+            if (selectedMediaFile) {
+                if (selectedMediaFile.type.startsWith('image/')) {
+                    formData.append('image', selectedMediaFile);
+                } else if (selectedMediaFile.type.startsWith('video/')) {
+                    formData.append('video', selectedMediaFile);
+                }
+            }
+
+            // 5. Get JWT Token
+            const token = localStorage.getItem('jwt_token');
+            if (!token) {
+                showMessage('Authentication token not found. Please log in.', 'error');
+                setTimeout(() => window.location.href = `http://localhost:${BACKEND_PORT}/login.html`, 2000);
+                return;
+            }
+
+            // 6. Send the data to your backend
+            try {
+                const response = await fetch(`http://localhost:${BACKEND_PORT}/api/places/create`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                        // Do NOT set Content-Type for FormData; browser sets it automatically
+                    },
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showMessage('Restaurant posted successfully!', 'success');
+                    console.log('Success:', result);
+                    form.reset(); // Clear form
+                    // Reset map marker and view
+                    marker.setLatLng([9.03, 38.74]); 
+                    map.setView([9.03, 38.74], 13);
+                    // Clear dynamically added menu items (keep one empty)
+                    const initialMenuItem = document.querySelector('#menu-items > div');
+                    document.querySelectorAll('#menu-items > div:not(:first-child)').forEach(item => item.remove());
+                    if (initialMenuItem) {
+                        initialMenuItem.querySelector('input[name="menu_name[]"]').value = '';
+                        initialMenuItem.querySelector('input[name="menu_price[]"]').value = '';
+                        initialMenuItem.querySelector('textarea[name="menu_ingredients[]"]').value = '';
+                    }
+                    // Clear media preview
+                    selectedMediaFile = null;
+                    mediaFileInput.value = '';
+                    imagePreview.classList.add('hidden');
+                    videoPreview.classList.add('hidden');
+                    mediaPreviewContainer.style.display = 'none';
+                    removeMediaButton.classList.add('hidden');
+
+                    // Redirect after a short delay
+                    setTimeout(() => {
+                        window.location.href = `http://localhost:${BACKEND_PORT}/x.html`;
+                    }, 1500);
+
+                } else {
+                    const errorData = await response.json().catch(() => ({ message: 'Failed to parse error response.' }));
+                    showMessage('Error posting restaurant: ' + (errorData.message || response.statusText), 'error');
+                    console.error('Error:', response.status, errorData);
+                }
+            } catch (error) {
+                showMessage('Network error. Please check if the backend is running.', 'error');
+                console.error('Network or other error:', error);
+            }
+        });
+
+    </script>
+</body>
+</html>

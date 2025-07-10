@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Delicious Bites</title>
+    <!-- Tailwind CSS CDN - Ensure this is present for Tailwind classes to work -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Optional: Font Awesome for icons if you plan to use them here -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Base styles that Tailwind doesn't override or for specific needs */
+        body {
+            /* Ensures body uses full height and no default margin/padding */
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif; /* Fallback font */
+        }
+        /* Custom styling for floating labels - Tailwind doesn't have a direct utility for this */
+        .input-box input {
+            padding-right: 2.5rem; /* Space for a potential icon */
+        }
+        .input-box .icon {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #b0b0b0; /* Icon color */
+        }
+    </style>
+</head>
+<body class="box-border m-0 p-0 font-sans">
+    <main class="flex min-h-screen items-center justify-center p-5 relative
+                  bg-[url('https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=1950&q=80')] bg-cover bg-center">
+        <!-- Overlay for the background image -->
+        <div class="absolute inset-0 bg-black bg-opacity-60"></div>
+
+        <!-- Wrapper for the login form -->
+        <div class="wrapper relative z-10 w-[360px] p-10 rounded-lg shadow-lg
+                     bg-transparent bg-black/80 backdrop-blur-md">
+            <!-- Back button - Using th:href for Thymeleaf processing -->
+            <a th:href="@{/x.html}" class="absolute top-4 left-4 z-20 p-2 bg-black bg-opacity-50 rounded-full hover:bg-opacity-75 transition-colors">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+            </a>
+
+            <form id="loginForm" action="#" method="POST"> <!-- Removed action, added method -->
+                <h1 class="text-center mb-6 text-[#ededed] uppercase text-2xl font-bold">Login</h1>
+                
+                <div class="input-box mb-4 relative">
+                    <input type="text" placeholder="username" required name="username"
+                           class="w-full py-3 px-4 border border-[#565050] rounded-md text-base transition-colors
+                                  focus:outline-none focus:border-[#868d94] bg-white text-black">
+                    <!-- Optional icon: <i class="fas fa-user absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"></i> -->
+                </div>
+                
+                <div class="input-box mb-4 relative">
+                    <input type="password" placeholder="password" required name="password"
+                           class="w-full py-3 px-4 border border-[#565050] rounded-md text-base transition-colors
+                                  focus:outline-none focus:border-[#868d94] bg-white text-black">
+                    <!-- Optional icon: <i class="fas fa-lock absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"></i> -->
+                </div>
+
+                <!-- Error/Status Message Display -->
+                <p id="statusMessage" class="text-red-400 text-center text-sm mb-4"></p>
+
+                <button type="submit"
+                        class="w-full py-3 bg-[#454b51] text-white border-none rounded-md text-base cursor-pointer
+                               transition-colors transition-transform hover:bg-[#e88112] active:scale-98 font-semibold">
+                    Login
+                </button>
+                
+                <div class="sign-up_link mt-4 text-center text-sm">
+                    <p class="text-white">Don't have an account? 
+                        <a th:href="@{/sign-up.html}" class="text-[#aebac6] no-underline hover:underline">Sign up here</a>
+                    </p>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginForm = document.getElementById('loginForm');
+            const statusMessage = document.getElementById('statusMessage');
+            const BACKEND_PORT = '8081'; // Your backend is running on port 8081
+
+            const showStatusMessage = (message, isError = true) => {
+                statusMessage.textContent = message;
+                statusMessage.className = `text-center text-sm mb-4 ${isError ? 'text-red-400' : 'text-green-400'}`;
+            };
+
+            loginForm.addEventListener('submit', async (event) => {
+                event.preventDefault(); // Prevent default form submission
+                showStatusMessage(''); // Clear previous messages
+
+                const username = loginForm.elements.username.value;
+                const password = loginForm.elements.password.value;
+
+                if (!username || !password) {
+                    showStatusMessage('Please enter both username and password.');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`http://localhost:${BACKEND_PORT}/auth/login`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username, password })
+                    });
+
+                    // Parse the response as JSON (even for errors, if backend sends JSON)
+                    const data = await response.json().catch(() => {
+                        // If parsing fails, it means the response was not JSON.
+                        // This might happen for 500 errors or other non-standard responses.
+                        // You can log the raw response text here if needed for debugging.
+                        // console.error("Failed to parse response as JSON:", response.text());
+                        return { success: false, message: "Unexpected server response." };
+                    });
+
+                    if (response.ok && data.success) {
+                        // Login successful
+                        localStorage.setItem('jwt_token', data.jwt); // Store the JWT token!
+                        showStatusMessage('Login successful! Redirecting...', false); // false for success message
+                        console.log('Login successful. JWT stored:', data.jwt);
+                        window.location.href = `http://localhost:${BACKEND_PORT}/x.html`; // Redirect to home page
+                    } else {
+                        // Login failed
+                        let errorMessage = 'Login failed.';
+                        if (data.failReason) {
+                            if (data.failReason === "INVALID_CREDENTIALS") {
+                                errorMessage = "Invalid username or password.";
+                            } else if (data.failReason === "USER_NOT_VERIFIED") {
+                                // Although we removed email verification, this is a fallback if the backend still sends it
+                                errorMessage = "Account not verified. Please check your email for verification link.";
+                            } else {
+                                errorMessage = data.failReason;
+                            }
+                        } else if (data.message) { // Fallback for generic message from backend
+                             errorMessage = data.message;
+                        } else if (response.status === 400) {
+                            errorMessage = "Bad request. Please check your inputs.";
+                        } else if (response.status === 500) {
+                            errorMessage = "Server error. Please try again later.";
+                        }
+                        showStatusMessage(errorMessage);
+                        console.error('Login failed:', response.status, data);
+                    }
+                } catch (error) {
+                    // Network error or other fetch-related issues
+                    showStatusMessage('Network error. Please check if the server is running.', true);
+                    console.error('Network error during login:', error);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

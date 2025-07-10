@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Restaurant Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #1a1a1a; /* Dark background */
+            color: #e0e0e0; /* Light text */
+            font-family: 'Inter', sans-serif;
+        }
+        .drop-shadow-lg {
+            text-shadow: 0 2px 6px rgba(0,0,0,0.7); 
+        }
+        #detail-map { /* ID for the map container */
+            height: 300px;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 0.5rem;
+        }
+        /* Custom styles for detail sections */
+        .detail-section {
+            background-color: #2a2a2a; /* Slightly lighter dark for sections */
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #fbbf24; /* Orange-400 */
+        }
+        .detail-value {
+            color: #e0e0e0;
+        }
+        .menu-item {
+            border-bottom: 1px dashed #444;
+            padding-bottom: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        .menu-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+    </style>
+</head>
+<body class="bg-neutral-900 text-gray-200 font-sans">
+
+    <div class="max-w-3xl mx-auto bg-white shadow-lg overflow-hidden md:rounded-lg">
+        <header 
+            id="restaurant-header" class="relative h-72 overflow-hidden bg-cover bg-center" 
+            style="background-image: url('https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=1950&q=80');"
+        >
+            <a href="x.html" class="absolute top-4 left-4 z-10 p-2 bg-black bg-opacity-50 rounded-full hover:bg-opacity-75 transition-all">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+            </a>
+            <div class="absolute bottom-5 left-5 text-white drop-shadow-lg">
+                <h1 id="restaurant-name" class="text-4xl md:text-5xl font-bold mb-2">Loading...</h1>
+                <p id="restaurant-description-header" class="text-lg md:text-xl italic"></p>
+            </div>
+        </header>
+
+        <!-- Loading and Error Messages -->
+        <div id="loading-spinner" class="text-center p-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto"></div>
+            <p class="mt-4 text-lg text-gray-400">Loading restaurant details...</p>
+        </div>
+        <div id="error-display" class="text-red-500 text-center p-8 hidden">
+            <p>Error loading restaurant details. Please try again later.</p>
+        </div>
+
+        <!-- Main Content - Hidden until data loads -->
+        <div id="restaurant-content" class="hidden">
+            <section class="p-8 bg-neutral-800">
+                <div class="mb-6">
+                    <h3 class="text-gray-300 text-lg mb-2">Opening Hours: <span id="restaurant-opening-hours" class="font-semibold">Loading...</span></h3>
+                    <div class="mt-4">
+                        <a id="book-table-link" href="res.html" class="inline-block px-6 py-3 bg-amber-600 text-white font-semibold rounded-lg shadow-md hover:bg-amber-700 transition-colors duration-200">
+                            Book Your Table
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mb-4 border-b border-neutral-700">
+                    <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="default-tab" data-tabs-toggle="#default-tab-content" role="tablist">
+                        <li class="me-2" role="presentation">
+                            <button class="inline-block p-4 border-b-2 rounded-t-lg text-white border-amber-500" 
+                                    id="profile-tab" data-tabs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="true">Menu</button>
+                        </li>
+                        <li class="me-2" role="presentation">
+                            <button class="inline-block p-4 border-b-2 border-transparent rounded-t-lg text-white hover:text-gray-300 hover:border-amber-500" 
+                                    id="dashboard-tab" data-tabs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="false">Reviews</button>
+                        </li>
+                        <li class="me-2" role="presentation">
+                            <button class="inline-block p-4 border-b-2 border-transparent rounded-t-lg text-white hover:text-gray-300 hover:border-amber-500" 
+                                    id="settings-tab" data-tabs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="false">Location</button>
+                        </li>
+                        <li role="presentation">
+                            <button class="inline-block p-4 border-b-2 border-transparent rounded-t-lg text-white hover:text-gray-300 hover:border-amber-500" 
+                                    id="contacts-tab" data-tabs-target="#contacts" type="button" role="tab" aria-controls="contacts" aria-selected="false">Contacts</button>
+                        </li>
+                    </ul>
+                </div>
+
+                <div id="default-tab-content">
+                    <!-- Menu Tab Content -->
+                    <div class="p-4 rounded-lg" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                        <h2 class="text-center text-3xl md:text-4xl font-bold text-white mb-8">Our Menu</h2>
+                        <div id="menu-items-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <p class="text-gray-400 text-center col-span-full">Loading menu...</p>
+                            <!-- Dynamic menu items will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Reviews Tab Content -->
+                    <div class="hidden p-4 rounded-lg" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+                        <div>
+                            <div class="mt-4">
+                                <a id="add-review-link" href="addreview.html" class="inline-block px-2 py-1 bg-amber-600 text-white font-semibold rounded-lg shadow-md hover:bg-amber-700 transition-colors duration-200">
+                                    Leave a review
+                                </a>
+                            </div>
+                            <div id="reviews-container" class="mt-8 space-y-4">
+                                <p class="text-gray-400 text-center">Loading reviews...</p>
+                                <!-- Dynamic reviews will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location Tab Content -->
+                    <div class="hidden p-4 rounded-lg" id="settings" role="tabpanel" aria-labelledby="settings-tab">
+                        <label class="block text-sm font-medium text-gray-200 mt-4 mb-1">Restaurant Location</label>
+                        <div id="detail-map" class="w-full h-80 rounded-lg shadow-md"></div> 
+                    </div>
+
+                    <!-- Contacts Tab Content -->
+                    <div class="hidden p-4 rounded-lg" id="contacts" role="tabpanel" aria-labelledby="contacts-tab">
+                        <p class="text-sm text-gray-300">Phone number: <strong id="restaurant-phone" class="font-medium text-gray-100">Loading...<br></strong> Email: <strong id="restaurant-email" class="font-medium text-gray-100">Loading...</strong></p>
+                        <p class="text-sm text-gray-300 mt-2">Address: <strong id="restaurant-address" class="font-medium text-gray-100">Loading...</strong></p>
+                        <p class="text-sm text-gray-300 mt-2">Cuisine: <strong id="restaurant-cuisine" class="font-medium text-gray-100">Loading...</strong></p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script>
+        const BACKEND_PORT = '8081'; // Make sure this matches your Spring Boot port
+
+        let detailMapInstance = null; // Use a distinct name for the detail map instance
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const placeId = urlParams.get('id');
+
+            if (placeId) {
+                fetchPlaceDetails(placeId);
+            } else {
+                document.getElementById('loading-spinner').classList.add('hidden');
+                document.getElementById('error-display').textContent = 'No restaurant ID provided in the URL.';
+                document.getElementById('error-display').classList.remove('hidden');
+            }
+
+            // Event listener for the Location tab to ensure map renders correctly
+            const locationTabButton = document.getElementById('settings-tab');
+            if (locationTabButton) {
+                locationTabButton.addEventListener('click', () => {
+                    // Delay map initialization slightly to ensure the tab content is visible
+                    setTimeout(() => {
+                        if (detailMapInstance) {
+                            detailMapInstance.invalidateSize(); // Invalidate size if map already exists
+                        } else {
+                            // If map was not initialized yet (e.g., if coordinates were not available initially)
+                            // Re-fetch details to ensure map is drawn if data becomes available
+                            const currentPlaceId = new URLSearchParams(window.location.search).get('id');
+                            if (currentPlaceId) {
+                                fetchPlaceDetails(currentPlaceId); // Re-fetch to ensure map init with data
+                            }
+                        }
+                    }, 100);
+                });
+            }
+        });
+
+        async function fetchPlaceDetails(id) {
+            const loadingSpinner = document.getElementById('loading-spinner');
+            const errorDisplay = document.getElementById('error-display');
+            const restaurantContent = document.getElementById('restaurant-content');
+
+            loadingSpinner.classList.remove('hidden');
+            errorDisplay.classList.add('hidden');
+            restaurantContent.classList.add('hidden');
+
+            try {
+                const response = await fetch(`http://localhost:${BACKEND_PORT}/api/places/${id}`);
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ message: 'Failed to parse error response.' }));
+                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.message || response.statusText}`);
+                }
+
+                const place = await response.json();
+                renderPlaceDetails(place);
+
+                loadingSpinner.classList.add('hidden');
+                restaurantContent.classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Error fetching place details:', error);
+                loadingSpinner.classList.add('hidden');
+                errorDisplay.textContent = `Failed to load restaurant details: ${error.message}`;
+                errorDisplay.classList.remove('hidden');
+            }
+        }
+
+        function renderPlaceDetails(place) {
+            // Update Header
+            document.getElementById('restaurant-name').textContent = place.name || 'N/A';
+            document.getElementById('restaurant-description-header').textContent = place.description || 'No description available.';
+            
+            // Update Header Background/Media
+            const headerElement = document.getElementById('restaurant-header'); // Use the ID for the header
+            if (place.videoUrl) {
+                headerElement.style.backgroundImage = 'none'; // Remove background image if video
+                headerElement.innerHTML = `
+                    <a href="x.html" class="absolute top-4 left-4 z-10 p-2 bg-black bg-opacity-50 rounded-full hover:bg-opacity-75 transition-all">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                    </a>
+                    <video src="${place.videoUrl}" controls autoplay loop muted class="w-full h-full object-cover absolute inset-0"></video>
+                    <div class="absolute bottom-5 left-5 text-white drop-shadow-lg z-10">
+                        <h1 id="restaurant-name-video" class="text-4xl md:text-5xl font-bold mb-2">${place.name || 'N/A'}</h1>
+                        <p id="restaurant-description-header-video" class="text-lg md:text-xl italic">${place.description || 'No description available.'}</p>
+                    </div>
+                `;
+                // Re-assign IDs for elements within the dynamically updated header
+                // This is crucial because innerHTML replaces elements, losing their original IDs
+                document.getElementById('restaurant-name-video').id = 'restaurant-name';
+                document.getElementById('restaurant-description-header-video').id = 'restaurant-description-header';
+
+            } else if (place.imageUrl) {
+                headerElement.style.backgroundImage = `url('${place.imageUrl}')`;
+                // Ensure the name and description are still in the header if image is used
+                // These elements are already in the static HTML, just ensure their text is updated
+                document.getElementById('restaurant-name').textContent = place.name || 'N/A';
+                document.getElementById('restaurant-description-header').textContent = place.description || 'No description available.';
+            } else {
+                // Fallback if no media
+                headerElement.style.backgroundImage = `url('https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=1950&q=80')`;
+                document.getElementById('restaurant-name').textContent = place.name || 'N/A';
+                document.getElementById('restaurant-description-header').textContent = place.description || 'No description available.';
+            }
+
+            // Update Main Details Section (Opening Hours)
+                  document.getElementById('restaurant-cuisine').textContent = place.cuisine || 'N/A';
+            document.getElementById('restaurant-opening-hours').textContent = place.openingHours || 'N/A';
+            
+            // Update Book Table Link (if needed, pass place ID)
+            const bookTableLink = document.getElementById('book-table-link');
+            if (bookTableLink) {
+                bookTableLink.href = `res.html?placeId=${place.id}`; // Example: pass ID to reservation page
+            }
+
+            // Render Menu Items
+            const menuItemsContainer = document.getElementById('menu-items-container');
+            menuItemsContainer.innerHTML = ''; // Clear static content
+            if (place.menuItems && place.menuItems.length > 0) {
+                place.menuItems.forEach(item => {
+                    const menuItemDiv = document.createElement('div');
+                    menuItemDiv.className = 'bg-neutral-900 p-6 rounded-lg border-t-4 border-amber-500 shadow-md';
+                    menuItemDiv.innerHTML = `
+                        <h3 class="text-xl font-semibold text-amber-400 mb-2">${item.item || 'Untitled Item'}</h3>
+                        <p class="text-gray-300 text-base mb-4">${item.ingredients || 'No ingredients listed.'}</p>
+                        <span class="text-lg font-bold text-gray-200">${item.price !== undefined && item.price !== null ? item.price + ' birr' : 'N/A'}</span>
+                    `;
+                    menuItemsContainer.appendChild(menuItemDiv);
+                });
+            } else {
+                menuItemsContainer.innerHTML = '<p class="text-gray-400 text-center col-span-full">No menu items available.</p>';
+            }
+
+            // Render Location Map
+            const mapElement = document.getElementById('detail-map'); // Use the new ID
+            if (place.latitude !== undefined && place.latitude !== null && place.longitude !== undefined && place.longitude !== null) {
+                // Destroy existing map instance if it exists to prevent errors
+                if (detailMapInstance) {
+                    detailMapInstance.remove();
+                    detailMapInstance = null;
+                }
+                detailMapInstance = L.map('detail-map').setView([place.latitude, place.longitude], 15);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(detailMapInstance);
+                L.marker([place.latitude, place.longitude]).addTo(detailMapInstance)
+                    .bindPopup(`<b>${place.name || 'Restaurant'}</b><br>${place.address || 'N/A'}`).openPopup();
+                
+                // Invalidate size immediately after setting view to ensure it renders correctly
+                detailMapInstance.invalidateSize();
+            } else {
+                mapElement.innerHTML = '<p class="text-gray-400 text-center">Location not available for this restaurant.</p>';
+            }
+
+            // Update Contacts Tab
+            document.getElementById('restaurant-phone').textContent = place.contactInfo || 'N/A';
+            document.getElementById('restaurant-email').textContent = place.email || 'N/A';
+            document.getElementById('restaurant-address').textContent = place.address || 'N/A';
+      
+
+            // Update Reviews Link (if needed, pass place ID)
+            const addReviewLink = document.getElementById('add-review-link');
+            if (addReviewLink) {
+                addReviewLink.href = `addreview.html?placeId=${place.id}`; // Example: pass ID to add review page
+            }
+
+            // TODO: Implement fetching and rendering for reviews in the 'Reviews' tab
+            // For now, it will just show "Loading reviews..." or the static content if not removed.
+            // You'll need a separate fetch call for reviews if they are not part of PlaceDTO
+            // or if you want them paginated/loaded on tab click.
+        }
+    </script>
+</body>
+</html>

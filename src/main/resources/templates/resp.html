@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Reservation Confirmation</title>
+    <!-- Tailwind CSS CDN - Ensure this is present -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Optional: Add Google Fonts if 'Poppins' is used elsewhere for consistency, or adjust font-family in body style -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+        /* Base styles that Tailwind doesn't override or for specific needs */
+        body {
+            /* Ensures body uses full height and no default margin/padding */
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif; /* Fallback font, adjust if Poppins is preferred */
+            color: #e0dcdc; /* Consistent light gray text for the page */
+        }
+    </style>
+</head>
+<body class="flex justify-center items-center min-h-screen relative
+             bg-[url('https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=1950&q=80')] bg-cover bg-center">
+    <!-- Background overlay for readability -->
+    <div class="absolute inset-0 bg-black bg-opacity-10"></div>
+
+    <div class="relative z-10 p-5 w-full max-w-md">
+        <!-- Back button - Using th:href for Thymeleaf processing -->
+        <a th:href="@{/x.html}" class="absolute top-4 left-4 z-20 p-2 bg-black bg-opacity-50 rounded-full hover:bg-opacity-75 transition-colors">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+        </a>
+
+        <div class="card-container bg-[#1a1919] p-8 rounded-lg shadow-xl w-full text-center">
+            <h1 class="mb-5 text-[#e0dcdc] text-2xl font-bold">Your Reservation Details</h1>
+            <div class="card space-y-2" id="reservationCard">
+                <!-- Reservation details will be dynamically injected here by JavaScript -->
+                <p class="text-white">Loading reservation details...</p> 
+            </div>
+            
+            <div class="mt-8 flex justify-center">
+                <!-- Using th:href for consistency with Thymeleaf -->
+                <a th:href="@{/res.html}" class="inline-block px-6 py-3 bg-amber-600 text-white font-semibold rounded-lg shadow-md hover:bg-amber-700 transition-colors duration-200">
+                    Book Your Table
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const reservation = JSON.parse(localStorage.getItem('reservation'));
+            const reservationCard = document.getElementById('reservationCard');
+
+            if (reservation) {
+                reservationCard.innerHTML = `
+                    <p class="bg-[#cb8331] text-white py-2 px-3 rounded-md mb-2"><strong>Email:</strong> ${reservation.email}</p>
+                    <p class="bg-[#cb8331] text-white py-2 px-3 rounded-md mb-2"><strong>Restaurant:</strong> ${reservation.restaurant}</p>
+                    <p class="bg-[#cb8331] text-white py-2 px-3 rounded-md mb-2"><strong>Date:</strong> ${reservation.date}</p>
+                    <p class="bg-[#cb8331] text-white py-2 px-3 rounded-md mb-2"><strong>Time:</strong> ${reservation.time}</p>
+                    <p class="bg-[#cb8331] text-white py-2 px-3 rounded-md"><strong>Number of People:</strong> ${reservation.people}</p>
+                `;
+            } else {
+                reservationCard.innerHTML = '<p class="text-white text-center">No reservation found.</p>';
+            }
+        });
+    </script>
+</body>
+</html>
