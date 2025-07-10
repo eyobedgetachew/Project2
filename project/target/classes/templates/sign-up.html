@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Sign Up | Delicious Bites</title>
+    <!-- Tailwind CSS CDN - Ensure this is present -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+        /* Base styles not directly covered by Tailwind, or custom overrides */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+        /* Custom styling for floating labels - Tailwind doesn't have a direct utility for this */
+        .form label {
+            position: relative;
+            display: block; /* Make label a block to contain input and span */
+            margin-bottom: 10px; /* Gap from original */
+        }
+        .form label .input {
+            padding: 20px 10px 5px 10px; /* Adjust padding for floating label */
+        }
+        .form label .input + span {
+            position: absolute;
+            left: 10px;
+            top: 12.5px; /* Adjust initial position */
+            font-size: 0.9em;
+            color: rgba(10, 9, 9, 0.5); /* Placeholder color */
+            pointer-events: none; /* Make span unclickable */
+            transition: 0.3s ease;
+        }
+        .form label .input:focus + span,
+        .form label .input:valid + span {
+            top: 0px; /* Move up when focused/filled */
+            font-size: 0.7em;
+            font-weight: 600;
+            color: #000000; /* Color when focused/filled */
+        }
+    </style>
+</head>
+<body class="flex justify-center items-center min-h-screen p-5 relative
+             bg-[url('https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=1950&q=80')] bg-cover bg-center">
+    <!-- Background overlay -->
+    <div class="absolute inset-0 bg-black bg-opacity-10"></div>
+
+    <div class="container w-full max-w-xl p-5 relative z-10">
+        <div class="signup-form rounded-xl p-10 shadow-lg
+                    bg-transparent bg-gray-900/50 backdrop-blur-md text-white text-center">
+            <h1 class="text-3xl mb-2.5 font-bold">Create an Account</h1>
+            <p class="text-gray-300 mb-6 text-sm">Join us today and explore delicious recipes!</p>
+
+            <form class="form flex flex-col gap-2.5 max-w-md p-5 rounded-2xl relative
+                         bg-transparent text-white border border-transparent mx-auto">
+                <div class="flex w-full gap-1.5">
+                    <label class="w-full">
+                        <input class="input w-full bg-white text-black py-3 px-2.5 outline-none border border-gray-400/40 rounded-lg text-base"
+                               type="text" name="firstName" required />
+                        <span>First Name</span>
+                    </label>
+                    <label class="w-full">
+                        <input class="input w-full bg-white text-black py-3 px-2.5 outline-none border border-gray-400/40 rounded-lg text-base"
+                               type="text" name="lastName" required />
+                        <span>Last Name</span>
+                    </label>
+                </div>
+
+                <label>
+                    <input class="input w-full bg-white text-black py-3 px-2.5 outline-none border border-gray-400/40 rounded-lg text-base"
+                           type="text" name="username" required />
+                    <span>Username</span>
+                </label>
+
+                <!-- Role Dropdown -->
+                <label>
+                    <select class="input w-full bg-white text-black py-3 px-2.5 outline-none border border-gray-400/40 rounded-lg text-base"
+                            name="role" required>
+                        <option value="" disabled selected>Select Role</option>
+                        <option value="USER">User</option>
+                        <option value="OWNER">Owner</option>
+                    </select>
+                </label>
+
+                <label>
+                    <input class="input w-full bg-white text-black py-3 px-2.5 outline-none border border-gray-400/40 rounded-lg text-base"
+                           type="email" name="email" required />
+                    <span>Email</span>
+                </label>
+
+                <label>
+                    <input class="input w-full bg-white text-black py-3 px-2.5 outline-none border border-gray-400/40 rounded-lg text-base"
+                           type="password" name="password" required />
+                    <span>Password</span>
+                </label>
+
+                <label>
+                    <input class="input w-full bg-white text-black py-3 px-2.5 outline-none border border-gray-400/40 rounded-lg text-base"
+                           type="password" name="confirmPassword" required />
+                    <span>Confirm Password</span>
+                </label>
+
+                <button class="submit w-full py-2.5 border-none outline-none rounded-lg text-white text-base font-semibold cursor-pointer
+                               transition-colors duration-300 bg-[#282c2de2] hover:bg-[#e88112] transform active:scale-98"
+                        type="submit">
+                    Next
+                </button>
+                <p class="signin text-center mt-4 text-sm text-white/70">Already have an account? 
+                    <a th:href="@{/login.html}" class="text-[#e88112] no-underline hover:underline font-medium">Go back</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.querySelector('.form');
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                console.log("DEBUG: Prevented default form submission on signup.");
+
+                const firstName = form.elements.firstName.value;
+                const lastName = form.elements.lastName.value;
+                const username = form.elements.username.value;
+                const role = form.elements.role.value;
+                const email = form.elements.email.value;
+                const password = form.elements.password.value;
+                const confirmPassword = form.elements.confirmPassword.value;
+
+                if (password !== confirmPassword) {
+                    alert('Passwords do not match.');
+                    return;
+                }
+
+                const userData = {
+                    firstName,
+                    lastName,
+                    username,
+                    role,
+                    email,
+                    password
+                };
+
+                const BACKEND_PORT = '8081'; // Ensure this matches your backend
+
+                try {
+                    const response = await fetch(`http://localhost:${BACKEND_PORT}/auth/register`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(userData)
+                    });
+
+                    const data = await response.json().catch(() => ({ success: false, message: 'Failed to parse server response.' }));
+
+                    if (response.ok && data.success) { // Check both HTTP status and API response 'success' field
+                        console.log('Registration successful:', data.message);
+                        localStorage.setItem('jwt_token', data.jwt); // Store the JWT token!
+                        alert('Registration successful! Redirecting to interests setup.'); // Updated message
+                        window.location.href = `http://localhost:${BACKEND_PORT}/user,p.html`; // Redirect to interests page
+                    } else {
+                        console.error('Registration failed:', response.status, data);
+                        alert('Registration failed: ' + (data.message || data.failReason || response.statusText || 'Unknown error.'));
+                    }
+                } catch (error) {
+                    console.error('Network error during registration:', error);
+                    alert('Network error. Please check your backend is running and reachable on port ' + BACKEND_PORT + '.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
