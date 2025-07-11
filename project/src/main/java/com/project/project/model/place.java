@@ -1,7 +1,7 @@
 package com.project.project.model;
 
 import java.util.ArrayList;
-import java.util.List; // Keep if you use it elsewhere
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -14,15 +14,14 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn; // NEW: For @JoinColumn for owner
-import jakarta.persistence.ManyToOne; // NEW: For @ManyToOne owner relationship
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany; // Changed from OneToOne
 import jakarta.persistence.Table;
 
 @Entity
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-@Table(name = "Place") // Table name is "Place"
+@Table(name = "Place")
 public class Place {
 
     @Id
@@ -30,29 +29,30 @@ public class Place {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @Column(name = "names", nullable = false, unique = true) // Column name is "names"
+    @Column(name = "name", nullable = false, unique = true) // Changed from "names" to "name" for consistency
     private String name;
 
-    @Column(name = "opening_hours") // Existing field
+    @Column(name = "cuisine", nullable = false) // NEW: Add cuisine field
+    private String cuisine;
+
+    @Column(name = "opening_hours")
     private String openingHours;
 
-    @Column(name = "description", nullable = false) // Existing field
+    @Column(name = "description", nullable = false, columnDefinition = "TEXT") // Added columnDefinition for larger text
     private String description;
 
-    // --- NEW: Add owner relationship ---
-    @ManyToOne(fetch = FetchType.LAZY) // Or EAGER if you always need owner data
-    @JoinColumn(name = "owner_id", nullable = false) // Assuming a foreign key column named owner_id
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", nullable = false)
     private MyUser owner;
 
-    // --- NEW: Add imageUrl and videoUrl for Cloudinary ---
-    @Column(name = "image_url")
+    @Column(name = "image_url", columnDefinition = "TEXT") // Added columnDefinition for larger URLs
     private String imageUrl;
 
-    @Column(name = "video_url")
+    @Column(name = "video_url", columnDefinition = "TEXT") // Added columnDefinition for larger URLs
     private String videoUrl;
 
-    @Column(name = "address", nullable = false) // Assuming you have an address field
-    private String address; // Make sure you have this if not already present
+    @Column(name = "address", nullable = false)
+    private String address;
 
     @Column(name = "latitude")
     private Double latitude;
@@ -60,31 +60,39 @@ public class Place {
     @Column(name = "longitude")
     private Double longitude;
 
-    // Existing: OneToOne relationship with Menu
-    @OneToOne(mappedBy = "place", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JsonManagedReference("place-menu")
-    private Menu menu;
+    @Column(name = "contact_info", nullable = false) // NEW: Add contactInfo field
+    private String contactInfo;
 
-    // Existing: OneToMany relationship with Reservations
+    @Column(name = "email") // NEW: Add email field
+    private String email;
+
+    // CHANGED: OneToOne relationship with Menu to OneToMany with List<Menu>
+    @OneToMany(mappedBy = "place", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference("place-menu")
+    private List<Menu> menuItems = new ArrayList<>(); // Renamed to plural and initialized
+
     @OneToMany(mappedBy = "place", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference("place-reservations")
     private List<Reservation> reservations = new ArrayList<>();
 
-    // --- Constructors (add if not present, adjust if already present) ---
+    // Constructors
     public Place() {
     }
 
-    // You might want a constructor for convenience, e.g.:
-    public Place(String name, String openingHours, String description, MyUser owner) {
+    public Place(String name, String cuisine, String openingHours, String description, String address, String contactInfo, String email, Double latitude, Double longitude, MyUser owner) {
         this.name = name;
+        this.cuisine = cuisine;
         this.openingHours = openingHours;
         this.description = description;
+        this.address = address;
+        this.contactInfo = contactInfo;
+        this.email = email;
+        this.latitude = latitude;
+        this.longitude = longitude;
         this.owner = owner;
     }
 
-
-    // --- Getters and Setters (ensure all fields have them) ---
-
+    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -99,6 +107,15 @@ public class Place {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    // NEW: Getter and Setter for cuisine
+    public String getCuisine() {
+        return cuisine;
+    }
+
+    public void setCuisine(String cuisine) {
+        this.cuisine = cuisine;
     }
 
     public String getOpeningHours() {
@@ -117,7 +134,6 @@ public class Place {
         this.description = description;
     }
 
-    // NEW: Getters and Setters for owner
     public MyUser getOwner() {
         return owner;
     }
@@ -126,7 +142,6 @@ public class Place {
         this.owner = owner;
     }
 
-    // NEW: Getters and Setters for imageUrl and videoUrl
     public String getImageUrl() {
         return imageUrl;
     }
@@ -142,24 +157,6 @@ public class Place {
     public void setVideoUrl(String videoUrl) {
         this.videoUrl = videoUrl;
     }
-
-    public Menu getMenu() {
-        return menu;
-    }
-
-    public void setMenu(Menu menu) {
-        this.menu = menu;
-    }
-
-    public List<Reservation> getReservations() {
-        return reservations;
-    }
-
-    public void setReservations(List<Reservation> reservations) {
-        this.reservations = reservations;
-    }
-
-    // Existing: Getters and setters for imageUrl and videoUrl
 
     public String getAddress() {
         return address;
@@ -184,12 +181,56 @@ public class Place {
     public void setLongitude(Double longitude) {
         this.longitude = longitude;
     }
-    // Removed the unimplemented method (getPlacesWithMenus) from here as it's not part of the entity's direct responsibility
-    // public Collection<PlaceDTO> getPlacesWithMenus() {
-    // throw new UnsupportedOperationException("Unimplemented method 'getPlacesWithMenus'");
-    // }
 
-    // Consider adding add/remove methods for reservations for convenience:
+    // NEW: Getters and Setters for contactInfo and email
+    public String getContactInfo() {
+        return contactInfo;
+    }
+
+    public void setContactInfo(String contactInfo) {
+        this.contactInfo = contactInfo;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    // CHANGED: Getter and Setter for menuItems (List)
+    public List<Menu> getMenuItems() {
+        return menuItems;
+    }
+
+    public void setMenuItems(List<Menu> menuItems) {
+        this.menuItems = menuItems;
+    }
+
+    // Helper methods for menuItems (add if not already present)
+    public void addMenuItem(Menu menuItem) {
+        if (menuItem != null) {
+            menuItems.add(menuItem);
+            menuItem.setPlace(this); // Set the back-reference
+        }
+    }
+
+    public void removeMenuItem(Menu menuItem) {
+        if (menuItem != null) {
+            menuItems.remove(menuItem);
+            menuItem.setPlace(null); // Remove the back-reference
+        }
+    }
+
+    public List<Reservation> getReservations() {
+        return reservations;
+    }
+
+    public void setReservations(List<Reservation> reservations) {
+        this.reservations = reservations;
+    }
+
     public void addReservation(Reservation reservation) {
         this.reservations.add(reservation);
         reservation.setPlace(this);

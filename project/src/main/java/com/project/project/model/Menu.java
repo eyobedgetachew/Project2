@@ -10,7 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.ManyToOne; // CHANGED: From OneToOne to ManyToOne
 import jakarta.persistence.Table;
 
 @Entity
@@ -23,10 +23,12 @@ public class Menu {
     @Column(name = "id", nullable = false)
     private Long id;
 
-@OneToOne(optional = false)
-@JoinColumn(name = "place_id", referencedColumnName = "id", nullable = false, unique = true)
-@JsonBackReference("place-menu")
-private Place place;
+    // CHANGED: From @OneToOne to @ManyToOne
+    // REMOVED: unique = true from @JoinColumn
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "place_id", referencedColumnName = "id", nullable = false)
+    @JsonBackReference("place-menu") // This reference is now from Menu to Place
+    private Place place;
 
     @Column(name = "item", nullable = false)
     private String item;
@@ -35,7 +37,7 @@ private Place place;
     private String ingredients;
 
     @Column(name = "price", nullable = false)
-    private String price;
+    private String price; // Keeping as String as per your current entity
 
     // Getters and Setters
 

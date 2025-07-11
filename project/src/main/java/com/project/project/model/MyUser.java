@@ -1,22 +1,24 @@
 package com.project.project.model;
 
 import java.util.ArrayList;
-import java.util.Collection; // NEW: Import for Collection
-import java.util.Collections; // NEW: Import for Collections
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
-import org.springframework.security.core.GrantedAuthority; // NEW
-import org.springframework.security.core.authority.SimpleGrantedAuthority; // NEW
-import org.springframework.security.core.userdetails.UserDetails; // NEW
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo; // NEW: Import
-import com.fasterxml.jackson.annotation.JsonIgnore; // NEW: Import
-import com.fasterxml.jackson.annotation.ObjectIdGenerators; // NEW: Import
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -24,13 +26,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 
 @Entity
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 @Table(name = "my_user")
-public class MyUser implements UserDetails { // UPDATED: Implement UserDetails
+public class MyUser implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -59,9 +60,11 @@ public class MyUser implements UserDetails { // UPDATED: Implement UserDetails
     @Column(name = "role", nullable = false)
     private String role = "USER";
 
-    @ElementCollection
-    @Column(name = "interest")
-    private List<String> interest = new ArrayList<>();
+    // MODIFIED: Field name changed to 'interests' (plural)
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_interests", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "interest") // This column name in the join table remains 'interest'
+    private List<String> interests = new ArrayList<>(); // Field name changed
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
@@ -75,57 +78,25 @@ public class MyUser implements UserDetails { // UPDATED: Implement UserDetails
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reservation> reservations = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("id desc")
-    private List<VerificationToken> verificationTokens = new ArrayList<>();
-
-    @Column(name = "profile_picture_url", length = 1000)
-
+    @Column(name = "onboarding_complete", nullable = false)
+    private boolean onboardingComplete = false;
 
     @ManyToMany
-@JoinTable(
-    name = "user_liked_posts", // Name of the new join table
-    joinColumns = @JoinColumn(name = "user_id"), // Column for MyUser ID in the join table
-    inverseJoinColumns = @JoinColumn(name = "post_id") // Column for Post ID in the join table
-)
-@JsonIgnore // Important: Prevent infinite recursion when MyUser is serialized to JSON
-private List<Post> likedPosts = new ArrayList<>();
+    @JoinTable(
+        name = "user_liked_posts",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "post_id")
+    )
+    @JsonIgnore
+    private List<Post> likedPosts = new ArrayList<>();
 
-public List<Post> getLikedPosts() {
-    return likedPosts;
-}
+    private String profilePictureUrl;
 
-public void setLikedPosts(List<Post> likedPosts) {
-    this.likedPosts = likedPosts;
-}
-
-// Optional: Helper methods for managing the collection
-public void addLikedPost(Post post) {
-    if (this.likedPosts == null) {
-        this.likedPosts = new ArrayList<>();
-    }
-    if (!this.likedPosts.contains(post)) {
-        this.likedPosts.add(post);
-    }
-}
-
-public void removeLikedPost(Post post) {
-    if (this.likedPosts != null) {
-        this.likedPosts.remove(post);
-    }
-}
-
-private String profilePictureUrl;
+    @Column(name = "bio", length = 500)
+    private String bio;
 
 
-public String getProfilePictureUrl() {
-    return profilePictureUrl;
-}
-
-public void setProfilePictureUrl(String profilePictureUrl) {
-    this.profilePictureUrl = profilePictureUrl;
-}
-
+    // --- Getters and Setters (ensure all fields have them) ---
 
     public Long getId() {
         return id;
@@ -135,7 +106,7 @@ public void setProfilePictureUrl(String profilePictureUrl) {
         this.id = id;
     }
 
-    // @Override // No @Override needed here, as UserDetails has no getId()
+    @Override
     public String getUsername() {
         return username;
     }
@@ -144,7 +115,7 @@ public void setProfilePictureUrl(String profilePictureUrl) {
         this.username = username;
     }
 
-    @Override // NEW: Override from UserDetails
+    @Override
     public String getPassword() {
         return password;
     }
@@ -193,12 +164,13 @@ public void setProfilePictureUrl(String profilePictureUrl) {
         this.role = role;
     }
 
+    // MODIFIED: Getter and setter names now match the plural field name 'interests'
     public List<String> getInterests() {
-        return interest;
+        return interests;
     }
 
     public void setInterests(List<String> interests) {
-        this.interest = interests;
+        this.interests = interests;
     }
 
     public List<Place> getPlaces() {
@@ -225,65 +197,77 @@ public void setProfilePictureUrl(String profilePictureUrl) {
         this.reservations = reservations;
     }
 
-    public List<VerificationToken> getVerificationTokens() {
-        return verificationTokens;
+    public boolean isOnboardingComplete() {
+        return onboardingComplete;
     }
 
-    public void setVerificationTokens(List<VerificationToken> verificationTokens) {
-        this.verificationTokens = verificationTokens;
+    public void setOnboardingComplete(boolean onboardingComplete) {
+        this.onboardingComplete = onboardingComplete;
     }
 
-    public void addPlace(Place place) {
-        this.places.add(place);
-        place.setOwner(this);
+    public List<Post> getLikedPosts() {
+        return likedPosts;
     }
 
-    public void removePlace(Place place) {
-        this.places.remove(place);
-        place.setOwner(null);
+    public void setLikedPosts(List<Post> likedPosts) {
+        this.likedPosts = likedPosts;
     }
 
-    public void addPost(Post post) {
-        this.posts.add(post);
-        post.setUser(this);
+    public void addLikedPost(Post post) {
+        if (this.likedPosts == null) {
+            this.likedPosts = new ArrayList<>();
+        }
+        if (!this.likedPosts.contains(post)) {
+            this.likedPosts.add(post);
+        }
     }
 
-    public void removePost(Post post) {
-        this.posts.remove(post);
-        post.setUser(null);
+    public void removeLikedPost(Post post) {
+        if (this.likedPosts != null) {
+            this.likedPosts.remove(post);
+        }
+    }
+
+    public String getProfilePictureUrl() {
+        return profilePictureUrl;
+    }
+
+    public void setProfilePictureUrl(String profilePictureUrl) {
+        this.profilePictureUrl = profilePictureUrl;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
     }
 
     // --- UserDetails Interface Implementations ---
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Spring Security roles should be prefixed with "ROLE_"
-        // e.g., if role is "USER", it becomes "ROLE_USER"
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
     }
 
-    // This method is already present, but adding @Override for clarity
     @Override
     public boolean isAccountNonExpired() {
-        // Return true if accounts do not expire, or implement your expiration logic
         return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        // Return true if accounts are never locked, or implement your locking logic
         return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        // Return true if credentials do not expire, or implement your credential expiration logic
         return true;
     }
 
     @Override
     public boolean isEnabled() {
-        // Return true if the user is enabled (e.g., email verified)
-        return this.emailVerified; // Use emailVerified as the enabled status
+        return this.emailVerified;
     }
 }

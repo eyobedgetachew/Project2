@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.project.project.api.DTO.PostCreateDTO;
-import com.project.project.api.DTO.PostDTO; // Correct DTO package
+import com.project.project.api.DTO.PostDTO;
 import com.project.project.model.MyUser;
 import com.project.project.model.Place;
 import com.project.project.model.Post;
@@ -65,7 +65,7 @@ public class PostService {
                 throw new IllegalArgumentException("Place not found");
             }
             post.setPlace(placeOpt.get());
-        } else {
+        } else { // For 'USER' role posts
             if (dto.getPlaceId() != null) {
                 Optional<Place> placeOpt = placeDAO.findById(dto.getPlaceId());
                 if (placeOpt.isEmpty()) {
@@ -92,8 +92,8 @@ public class PostService {
      * Renamed from getAllPosts for clarity in feed context.
      */
     @Transactional(readOnly = true)
-    public List<PostDTO> getExploreFeedPosts() { // RENAMED for consistency
-        return postDAO.findAll().stream()
+    public List<PostDTO> getExploreFeedPosts() {
+        return postDAO.findAllByOrderByCreatedAtDesc().stream() // Use findAllByOrderByCreatedAtDesc
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -107,22 +107,29 @@ public class PostService {
                        .collect(Collectors.toList());
     }
 
-
     /**
      * Method for the "For You" feed (posts filtered by user interests/tags).
      * Takes MyUser directly and calls the new DAO method.
      */
     @Transactional(readOnly = true)
-    public List<PostDTO> getForYouFeedPosts(MyUser user) { // UPDATED: Takes MyUser object
+    public List<PostDTO> getForYouFeedPosts(MyUser user) {
         if (user == null || user.getInterests() == null || user.getInterests().isEmpty()) {
             return List.of(); // Return empty list if no interests
         }
         List<String> interests = user.getInterests();
-        // UPDATED: Call the correct DAO method name
-        List<Post> posts = postDAO.findByTagsInUserInterests(interests);
-        return posts.stream().map(this::toDTO).collect(Collectors.toList());
+        return postDAO.findByTagsInUserInterests(interests).stream().map(this::toDTO).collect(Collectors.toList());
     }
 
+    // NEW: Retrieve posts by a specific user (for their profile page), ordered by creation time
+    @Transactional(readOnly = true)
+    public List<PostDTO> getPostsByUser(MyUser user) {
+        if (user == null) {
+            return List.of(); // Return empty list if user is null
+        }
+        return postDAO.findByUserOrderByCreatedAtDesc(user).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
 
     // --- UPDATED DTO Mapper ---
     private PostDTO toDTO(Post post) {
@@ -144,7 +151,6 @@ public class PostService {
         // Set User details
         if (post.getUser() != null) {
             dto.setUsername(post.getUser().getUsername());
-            // NEW: Map user's profile picture URL
             dto.setUserProfilePictureUrl(post.getUser().getProfilePictureUrl());
         }
 

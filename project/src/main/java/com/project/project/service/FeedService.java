@@ -4,10 +4,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional; // Added for consistency
 
-import com.project.project.api.DTO.MenuDTO; // Import MenuDTO
+import com.project.project.api.DTO.MenuItemDTO; // CHANGED: Import MenuItemDTO
 import com.project.project.api.DTO.PlaceDTO;
-import com.project.project.model.Menu;
 import com.project.project.model.Place;
 import com.project.project.model.dao.PlaceDAO;
 
@@ -20,7 +20,12 @@ public class FeedService {
         this.placeDAO = placeDAO;
     }
 
-    // For users: get all places with their menus (each menu list has 0 or 1 MenuDTO)
+    /**
+     * Retrieves all places for the general feed, converting them to PlaceDTOs.
+     * This method is transactional and read-only for performance.
+     * @return A list of PlaceDTOs.
+     */
+    @Transactional(readOnly = true) // Added transactional annotation
     public List<PlaceDTO> getAllPlaces() {
         List<Place> places = placeDAO.findAll();
         return places.stream()
@@ -29,44 +34,50 @@ public class FeedService {
     }
 
     /**
-     * UPDATED METHOD: Helper to convert a Place entity to a PlaceDTO.
-     * Correctly maps all fields, including the single menu and new media URLs/owner.
+     * Helper to convert a Place entity to a PlaceDTO.
+     * Correctly maps all fields, including multiple menu items, media URLs, owner, and coordinates.
+     * @param place The Place entity to convert.
+     * @return A PlaceDTO representation.
      */
     private PlaceDTO toDTO(Place place) {
-        PlaceDTO dto = new PlaceDTO(); // Create new PlaceDTO object
+        PlaceDTO dto = new PlaceDTO();
 
         dto.setId(place.getId());
         dto.setName(place.getName());
-        dto.setOpeningHours(place.getOpeningHours()); // Map openingHours
-        dto.setDescription(place.getDescription()); // Map description
-        // Ensure owner is loaded or handle potential lazy loading issues if not EAGER
+        dto.setCuisine(place.getCuisine()); // NEW: Map cuisine
+        dto.setOpeningHours(place.getOpeningHours());
+        dto.setDescription(place.getDescription());
+        dto.setAddress(place.getAddress());
+        dto.setContactInfo(place.getContactInfo()); // NEW: Map contactInfo
+        dto.setEmail(place.getEmail()); // NEW: Map email
+        dto.setImageUrl(place.getImageUrl());
+        dto.setVideoUrl(place.getVideoUrl());
+        dto.setLatitude(place.getLatitude()); // NEW: Map latitude
+        dto.setLongitude(place.getLongitude()); // NEW: Map longitude
+
         if (place.getOwner() != null) {
-            dto.setOwnerUsername(place.getOwner().getUsername()); // Map owner's username
+            dto.setOwnerUsername(place.getOwner().getUsername());
         } else {
             dto.setOwnerUsername(null); // Or some default
         }
         
-        dto.setImageUrl(place.getImageUrl()); // Map imageUrl
-        dto.setVideoUrl(place.getVideoUrl()); // Map videoUrl
-
-        // Map single Menu entity to MenuDTO (NOT a List)
-        if (place.getMenu() != null) {
-            Menu menu = place.getMenu();
-            MenuDTO menuDTO = new MenuDTO(
-                menu.getId(),
-                place.getId(), // Include placeId in MenuDTO
-                menu.getItem(),
-                menu.getIngredients(),
-                menu.getPrice()
-            );
-            dto.setMenu(menuDTO); // Set the single MenuDTO
+        // CHANGED: Map List<Menu> to List<MenuItemDTO>
+        if (place.getMenuItems() != null && !place.getMenuItems().isEmpty()) {
+            List<MenuItemDTO> menuItemDTOs = place.getMenuItems().stream()
+                .map(menuItem -> {
+                    MenuItemDTO itemDTO = new MenuItemDTO();
+                    // No ID or placeId needed in MenuItemDTO for display
+                    itemDTO.setItem(menuItem.getItem());
+                    itemDTO.setIngredients(menuItem.getIngredients());
+                    itemDTO.setPrice(menuItem.getPrice());
+                    return itemDTO;
+                })
+                .collect(Collectors.toList());
+            dto.setMenuItems(menuItemDTOs); // Set the list of menu item DTOs
         } else {
-            dto.setMenu(null); // Explicitly set to null if no menu
+            dto.setMenuItems(List.of()); // Ensure it's an empty list if no items
         }
 
         return dto;
     }
-
-    // REMOVED: public PlaceDTO createPlaceWithMenu(PlaceDTO placeDto, MenuDTO menuDto)
-    // This functionality is now handled by PlaceService.createPlace and PlaceController.
 }

@@ -1,26 +1,30 @@
 package com.project.project.api.controller.place;
 
-import java.io.IOException; // NEW: Import for IOException
+import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
-import org.springframework.http.HttpStatus; // NEW: Import for HttpStatus
-import org.springframework.http.MediaType; // NEW: Import for MediaType
-import org.springframework.http.ResponseEntity; // NEW: Import for ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize; // NEW: Import for PreAuthorize
-import org.springframework.security.core.annotation.AuthenticationPrincipal; // NEW: Import for AuthenticationPrincipal
-import org.springframework.security.core.userdetails.UserDetails; // NEW: Import for UserDetails
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping; // NEW: Import for PostMapping
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart; // NEW: Import for RequestPart
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile; // NEW: Import for MultipartFile
+import org.springframework.web.multipart.MultipartFile;
 
-import com.project.project.api.DTO.PlaceCreateDTO; // NEW: Import PlaceCreateDTO
+import com.project.project.api.DTO.PlaceCreateDTO;
 import com.project.project.api.DTO.PlaceDTO;
+import com.project.project.model.MyUser;
 import com.project.project.service.PlaceService;
 
-import jakarta.validation.Valid; // NEW: Import for @Valid
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/places")
@@ -31,59 +35,123 @@ public class PlaceController {
         this.placeService = placeService;
     }
 
-    @GetMapping // Existing method, updated to call getAllPlaces
-    public List<PlaceDTO> getPlaces() {
-        return placeService.getAllPlaces();
+    @GetMapping
+    public ResponseEntity<List<PlaceDTO>> getPlaces() {
+        List<PlaceDTO> places = placeService.getAllPlaces();
+        return ResponseEntity.ok(places);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<PlaceDTO> getPlaceById(@PathVariable Long id) {
+        PlaceDTO placeDTO = placeService.getPlaceById(id);
+        if (placeDTO != null) {
+            return ResponseEntity.ok(placeDTO);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     /**
-     * NEW METHOD: Endpoint for an owner to create a new place with optional image/video and required menu.
-     * Expects a multipart/form-data request.
-     * The PlaceCreateDTO data should be sent as a part named "placeData".
-     * Image and video files should be sent as parts named "imageFile" and "videoFile".
-     *
-     * @param userDetails The authenticated owner's details.
-     * @param placeCreateDTO The DTO containing place details and nested menu details.
-     * @param imageFile Optional image file.
-     * @param videoFile Optional video file.
-     * @return ResponseEntity with the created PlaceDTO.
+     * Endpoint for an owner to retrieve their own restaurant's details.
+     * @param currentUser The authenticated owner.
+     * @return ResponseEntity with the PlaceDTO of the owner's restaurant, or 404 if not found.
      */
-    @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('OWNER')") // Only owners can create places
-    public ResponseEntity<PlaceDTO> createPlace(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @RequestPart("placeData") @Valid PlaceCreateDTO placeCreateDTO, // DTO as a RequestPart
-            @RequestPart(value = "imageFile", required = false) MultipartFile imageFile, // Optional image file
-            @RequestPart(value = "videoFile", required = false) MultipartFile videoFile // Optional video file
-    ) {
-        // Basic validation: ensure essential fields are present
-        if (placeCreateDTO.getName() == null || placeCreateDTO.getName().isBlank()) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+    @GetMapping("/my-restaurant")
+    @PreAuthorize("hasRole('OWNER')") // Only owners can access this
+    public ResponseEntity<PlaceDTO> getMyRestaurant(@AuthenticationPrincipal MyUser currentUser) {
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        // Ensure menu and its item are present, as menu is required for Place
-        if (placeCreateDTO.getMenu() == null || placeCreateDTO.getMenu().getItem() == null || placeCreateDTO.getMenu().getItem().isBlank()) {
-             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        PlaceDTO placeDTO = placeService.getPlaceByOwnerUsername(currentUser.getUsername());
+        if (placeDTO != null) {
+            return ResponseEntity.ok(placeDTO);
+        } else {
+            return ResponseEntity.notFound().build(); // No restaurant found for this owner
         }
+    }
 
+    @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<Map<String, String>> createPlace(
+            @AuthenticationPrincipal MyUser currentUser,
+            @RequestPart("dto") @Valid PlaceCreateDTO placeCreateDTO,
+            @RequestPart(value = "image", required = false) MultipartFile imageFile,
+            @RequestPart(value = "video", required = false) MultipartFile videoFile
+    ) {
         try {
-            PlaceDTO createdPlace = placeService.createPlace(
-                    userDetails.getUsername(),
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("message", "User not authenticated."));
+            }
+            if (!"OWNER".equalsIgnoreCase(currentUser.getRole())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("message", "Only owners can create places."));
+            }
+
+            placeService.createPlace(
+                    currentUser.getUsername(),
                     placeCreateDTO,
                     imageFile,
                     videoFile
             );
-            return new ResponseEntity<>(createdPlace, HttpStatus.CREATED);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Collections.singletonMap("message", "Place created successfully!"));
         } catch (IllegalArgumentException e) {
             System.err.println("Bad Request for place creation: " + e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(Collections.singletonMap("message", e.getMessage()));
         } catch (IOException e) {
             System.err.println("File upload error for place creation: " + e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("message", "Failed to upload file: " + e.getMessage()));
         } catch (Exception e) {
-            // Catch any other unexpected exceptions for robust error handling
             System.err.println("An unexpected error occurred during place creation: " + e.getMessage());
-            e.printStackTrace(); // Print stack trace for debugging
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("message", "An unexpected error occurred."));
+        }
+    }
+
+    /**
+     * Endpoint for an owner to update their existing place.
+     * Uses PATCH for partial updates and supports multipart/form-data for files.
+     *
+     * @param id The ID of the place to update.
+     * @param currentUser The authenticated owner.
+     * @param placeUpdateDTO The DTO containing updated place details.
+     * @param imageFile Optional new image file.
+     * @param videoFile Optional new video file.
+     * @return ResponseEntity with a success message or error.
+     */
+    @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<Map<String, String>> updatePlace(
+            @PathVariable Long id,
+            @AuthenticationPrincipal MyUser currentUser,
+            @RequestPart("dto") @Valid PlaceCreateDTO placeUpdateDTO,
+            @RequestPart(value = "image", required = false) MultipartFile imageFile,
+            @RequestPart(value = "video", required = false) MultipartFile videoFile
+    ) {
+        try {
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("message", "User not authenticated."));
+            }
+            if (!"OWNER".equalsIgnoreCase(currentUser.getRole())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("message", "Only owners can update places."));
+            }
+
+            placeService.updatePlace(
+                    id,
+                    currentUser.getUsername(),
+                    placeUpdateDTO,
+                    imageFile,
+                    videoFile
+            );
+            return ResponseEntity.ok(Collections.singletonMap("message", "Place updated successfully!"));
+        } catch (IllegalArgumentException e) {
+            System.err.println("Bad Request for place update: " + e.getMessage());
+            return ResponseEntity.badRequest().body(Collections.singletonMap("message", e.getMessage()));
+        } catch (IOException e) {
+            System.err.println("File upload error for place update: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("message", "Failed to upload file: " + e.getMessage()));
+        } catch (Exception e) {
+            System.err.println("An unexpected error occurred during place update: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("message", "An unexpected error occurred."));
         }
     }
 }

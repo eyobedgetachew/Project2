@@ -3,12 +3,15 @@ package com.project.project.api.controller.feed;
 import java.io.IOException;
 import java.util.List;
 
+import org.springframework.boot.actuate.web.exchanges.HttpExchange.Principal;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails; // Keep this for existing methods
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -94,6 +97,10 @@ public class FeedController {
         return ResponseEntity.ok(explorePosts);
     }
 
+
+ 
+
+
     // NEW: Endpoint for the "For You" feed
     // Accessed via GET http://localhost:8080/api/feed/for-you
     // Requires authentication to get the user's interests
@@ -108,4 +115,8 @@ public class FeedController {
         List<PostDTO> forYouPosts = postService.getForYouFeedPosts(currentUser);
         return ResponseEntity.ok(forYouPosts);
     }
+     
+    
+ 
 }
+ 

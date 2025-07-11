@@ -1,17 +1,16 @@
 package com.project.project.model.dao;
 
-import java.util.List; // Import MyUser entity
+import java.util.Optional;
 
-import org.springframework.data.repository.ListCrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import com.project.project.model.MyUser;
-import com.project.project.model.Place; // Import List
+import com.project.project.model.Place;
 
-public interface PlaceDAO extends ListCrudRepository<Place, Long> {
-
-    // NEW: Find all places owned by a specific user
-    List<Place> findByOwner(MyUser owner);
-
-    // Alternative/convenience: Find all places by the owner's username
-    // List<Place> findByOwnerUsername(String username); // This also works due to property traversal
+@Repository
+public interface PlaceDAO extends JpaRepository<Place, Long> {
+    // Find a place by its owner.
+    // Assuming an owner can only have one place. If multiple, return List<Place>.
+    Optional<Place> findByOwner(MyUser owner);
 }

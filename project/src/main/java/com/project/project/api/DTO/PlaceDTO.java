@@ -1,40 +1,51 @@
 package com.project.project.api.DTO;
 
+import java.util.ArrayList; // NEW: Import List
+import java.util.List; // NEW: Import ArrayList for initialization
+
 public class PlaceDTO {
 
     private Long id;
     private String name;
+    private String cuisine; // NEW: Add cuisine field
     private String openingHours;
     private String description;
-    private String address; // NEW: Add this field for the place's address
+    private String address;
+    private String contactInfo; // NEW: Add contactInfo field
+    private String email; // NEW: Add email field
     private String ownerUsername;
 
-    private String imageUrl; // NEW: Field for image URL
-    private String videoUrl; // NEW: Field for video URL
+    private String imageUrl;
+    private String videoUrl;
 
-    private Double latitude; // NEW: Add this field
-    private Double longitude; // NEW: Add this field
-    private MenuDTO menu;
+    private Double latitude;
+    private Double longitude;
+
+    // CHANGED: From single MenuDTO to List of MenuItemDTO
+    private List<MenuItemDTO> menuItems = new ArrayList<>(); // Initialize to prevent null pointer
 
     public PlaceDTO() {
     }
 
-    // UPDATED Constructor: Includes all new fields
-    public PlaceDTO(Long id, String name, String openingHours, String description, String address,
-                    String ownerUsername, String imageUrl, String videoUrl,
-                    Double latitude, Double longitude, // Placed together for logical grouping
-                    MenuDTO menu) {
+    // UPDATED Constructor: Includes all new fields and List of menuItems
+    public PlaceDTO(Long id, String name, String cuisine, String openingHours, String description, String address,
+                    String contactInfo, String email, String ownerUsername, String imageUrl, String videoUrl,
+                    Double latitude, Double longitude, List<MenuItemDTO> menuItems) {
         this.id = id;
         this.name = name;
+        this.cuisine = cuisine;
         this.openingHours = openingHours;
         this.description = description;
-        this.address = address; // Initialize address
+        this.address = address;
+        this.contactInfo = contactInfo;
+        this.email = email;
         this.ownerUsername = ownerUsername;
         this.imageUrl = imageUrl;
         this.videoUrl = videoUrl;
-        this.latitude = latitude; // Initialize latitude
-        this.longitude = longitude; // Initialize longitude
-        this.menu = menu;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        // Ensure menuItems list is not null
+        this.menuItems = menuItems != null ? new ArrayList<>(menuItems) : new ArrayList<>();
     }
 
     // --- Getters and Setters (all unique) ---
@@ -52,6 +63,15 @@ public class PlaceDTO {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    // NEW: Getter and Setter for cuisine
+    public String getCuisine() {
+        return cuisine;
+    }
+
+    public void setCuisine(String cuisine) {
+        this.cuisine = cuisine;
     }
 
     public String getOpeningHours() {
@@ -76,6 +96,24 @@ public class PlaceDTO {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    // NEW: Getter and Setter for contactInfo
+    public String getContactInfo() {
+        return contactInfo;
+    }
+
+    public void setContactInfo(String contactInfo) {
+        this.contactInfo = contactInfo;
+    }
+
+    // NEW: Getter and Setter for email
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getOwnerUsername() {
@@ -118,11 +156,12 @@ public class PlaceDTO {
         this.longitude = longitude;
     }
 
-    public MenuDTO getMenu() {
-        return menu;
+    // CHANGED: Getter and Setter for menuItems (List)
+    public List<MenuItemDTO> getMenuItems() {
+        return menuItems;
     }
 
-    public void setMenu(MenuDTO menu) {
-        this.menu = menu;
+    public void setMenuItems(List<MenuItemDTO> menuItems) {
+        this.menuItems = menuItems;
     }
 }

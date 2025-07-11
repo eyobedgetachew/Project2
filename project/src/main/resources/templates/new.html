@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>User Profile</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-black text-white flex items-center justify-center min-h-screen px-4">
+    <div class="w-full max-w-2xl relative border-amber-500">
+        <!-- Header: Avatar, Name, Stats -->
+        <div class="flex items-center gap-6 p-4">
+            <img id="userAvatar" src="https://placehold.co/96x96/a16207/ffffff?text=U" alt="User Avatar" class="w-24 h-24 rounded-full object-cover border-2 border-orange-500" />
+            <div class="flex-1">
+                <h1 id="userName" class="text-2xl font-semibold">Loading Name...</h1>
+                <p id="userEmail" class="text-sm text-gray-400 mt-1">Loading Email...</p>
+                <p id="userBio" class="text-sm text-gray-400 mt-1">Food enthusiast | Reviewer | Explorer of flavors 🌍🍜</p>
+                
+                <!-- New Post Button -->
+                <a href="create-post.html"
+                   class="absolute top-4 right-0 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold py-2 px-2 rounded-md shadow transition">
+                   + New Post
+                </a>
+                
+                <!-- Stats -->
+                <div class="flex gap-8 mt-4">
+                    <div class="text-center">
+                        <h2 id="postsCount" class="text-lg font-bold">25</h2> {# Static for now #}
+                        <p class="text-sm text-orange-400">Posts</p>
+                    </div>
+                    <div class="text-center">
+                        <h2 id="likedCount" class="text-lg font-bold">10</h2> {# Static for now #}
+                        <p class="text-sm text-orange-400">Liked</p>
+                    </div>
+                </div>
+
+                <!-- Interests Container (NEW) -->
+                <div class="mt-4">
+                    <h3 class="text-md font-semibold text-orange-400">Interests:</h3>
+                    <div id="userInterestsContainer" class="flex flex-wrap gap-2 mt-2">
+                        <!-- Interests will be dynamically loaded here -->
+                        <span class="text-sm text-gray-400">Loading interests...</span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-4 mt-4">
+                    <a href="#"
+                       onclick="switchTab('posts')"
+                       id="postsTab"
+                       class="tab-btn text-sm px-4 py-2 rounded-md font-semibold bg-orange-500 hover:bg-orange-600 text-white transition"
+                    >
+                        Posts
+                    </a>
+                    <button
+                       onclick="switchTab('liked')"
+                       id="likedTab"
+                       class="tab-btn text-sm px-4 py-2 rounded-md font-semibold bg-gray-700 hover:bg-gray-600 text-gray-300 transition"
+                    >
+                        Liked
+                    </button>
+                    <!-- Link to change profile picture -->
+                    <a href="new.html" class="text-sm px-4 py-2 rounded-md font-semibold bg-gray-700 hover:bg-gray-600 text-gray-300 transition">
+                        Change Picture
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Divider -->
+        <hr class="border-gray-800 my-4">
+
+        <!-- Tab Content -->
+        <div id="posts" class="tab-content grid gap-4 p-4">
+            <div class="bg-gray-800 p-4 rounded-md shadow">
+                <h3 class="text-lg font-bold text-orange-400">My Favorite Vegan Spots</h3>
+                <p class="text-sm text-gray-300 mt-1">Exploring the best vegan restaurants in Addis Ababa. Highly recommend Green Life!</p>
+            </div>
+            <div class="bg-gray-800 p-4 rounded-md shadow">
+                <h3 class="text-lg font-bold text-orange-400">Best Coffee Corners ☕</h3>
+                <p class="text-sm text-gray-300 mt-1">Found a small café with amazing roast. Great ambiance!</p>
+            </div>
+        </div>
+
+        <div id="liked" class="tab-content hidden grid gap-4 p-4">
+            <div class="bg-gray-800 p-4 rounded-md shadow">
+                <h3 class="text-lg font-bold text-orange-400">Top 5 Injera Places</h3>
+                <p class="text-sm text-gray-300 mt-1">Someone made this list of the most authentic spots. Loved all of them!</p>
+            </div>
+            <div class="bg-gray-800 p-4 rounded-md shadow">
+                <h3 class="text-lg font-bold text-orange-400">New Chef in Town 🔥</h3>
+                <p class="text-sm text-gray-300 mt-1">Just liked this awesome post about a new chef who opened a spot in Bole.</p>
+            </div>
+        </div>
+        <div class="text-center">
+            <a id="backToHomeLink" href="x.html" class="text-sm text-gray-400 hover:text-orange-400 transition">← Back to Home</a>
+        </div>
+    </div>
+
+    <!-- Tab Switching Script -->
+    <script>
+        function switchTab(tab) {
+            const tabs = ['posts', 'liked'];
+            tabs.forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+                document.getElementById(id + 'Tab').classList.remove('bg-orange-500', 'text-white');
+                document.getElementById(id + 'Tab').classList.add('bg-gray-700', 'text-gray-300');
+            });
+
+            document.getElementById(tab).classList.remove('hidden');
+            document.getElementById(tab + 'Tab').classList.remove('bg-gray-700', 'text-gray-300');
+            document.getElementById(tab + 'Tab').classList.add('bg-orange-500', 'text-white');
+        }
+
+        const BACKEND_PORT = '8081'; // Your backend is running on port 8081
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const userAvatar = document.getElementById('userAvatar');
+            const userName = document.getElementById('userName');
+            const userEmail = document.getElementById('userEmail');
+            const userBio = document.getElementById('userBio');
+            const userInterestsContainer = document.getElementById('userInterestsContainer');
+            const backToHomeLink = document.getElementById('backToHomeLink');
+
+            backToHomeLink.href = `http://localhost:${BACKEND_PORT}/x.html`;
+
+            const token = localStorage.getItem('jwt_token');
+
+            if (!token) {
+                // If no token, display a message and do NOT attempt to fetch user data
+                userName.textContent = 'Please Log In';
+                userEmail.textContent = 'To view your profile, please log in.';
+                userBio.textContent = ''; // Clear default bio
+                userInterestsContainer.innerHTML = '<span class="text-sm text-red-400">Login to see your interests.</span>';
+                userAvatar.src = 'https://placehold.co/96x96/6b7280/ffffff?text=Guest'; // A different placeholder for guest
+                
+                // Optionally hide elements that only make sense for a logged-in user
+                document.querySelector('a[href="create-post.html"]').classList.add('hidden');
+                document.getElementById('postsTab').classList.add('hidden');
+                document.getElementById('likedTab').classList.add('hidden');
+                document.querySelector('a[href="new.html"]').classList.add('hidden'); // Change Picture link
+                document.getElementById('posts').classList.add('hidden'); // Hide static posts content
+                document.getElementById('liked').classList.add('hidden'); // Hide static liked content
+
+                return; // Stop execution here if not logged in
+            }
+
+            // If token exists, proceed with fetching user data
+            try {
+                const response = await fetch(`http://localhost:${BACKEND_PORT}/auth/me`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    console.log('Fetched user data:', user);
+
+                    // Populate user information
+                    userName.textContent = `${user.firstName || ''} ${user.lastName || ''}`;
+                    if (!user.firstName && !user.lastName) {
+                        userName.textContent = user.username || 'User Name';
+                    }
+                    userEmail.textContent = user.email || 'No email provided';
+                    userBio.textContent = user.bio || 'Food enthusiast | Reviewer | Explorer of flavors 🌍🍜'; 
+                    
+                    // Update profile picture
+                    if (user.profilePictureUrl) {
+                        userAvatar.src = user.profilePictureUrl;
+                    } else {
+                        userAvatar.src = 'https://placehold.co/96x96/a16207/ffffff?text=U'; // Default placeholder
+                    }
+
+                    // Populate interests
+                    userInterestsContainer.innerHTML = ''; // Clear loading message
+                    if (user.interests && user.interests.length > 0) {
+                        user.interests.forEach(interest => {
+                            const interestSpan = document.createElement('span');
+                            interestSpan.className = 'bg-gray-700 text-gray-300 px-3 py-1 rounded-full text-xs font-medium';
+                            interestSpan.textContent = interest;
+                            userInterestsContainer.appendChild(interestSpan);
+                        });
+                    } else {
+                        userInterestsContainer.innerHTML = '<span class="text-sm text-gray-400">No interests selected.</span>';
+                    }
+
+                } else if (response.status === 401 || response.status === 403) {
+                    alert('Session expired or unauthorized. Please log in again.');
+                    localStorage.removeItem('jwt_token'); // Clear invalid token
+                    window.location.href = `http://localhost:${BACKEND_PORT}/login.html`;
+                } else {
+                    const errorData = await response.json().catch(() => ({ message: 'Failed to parse error response.' }));
+                    console.error('Failed to fetch user profile:', response.status, errorData);
+                    alert('Failed to load profile: ' + (errorData.message || response.statusText));
+                    userName.textContent = 'Error Loading Profile';
+                    userEmail.textContent = '';
+                    userBio.textContent = '';
+                    userInterestsContainer.innerHTML = '<span class="text-red-400">Error loading interests.</span>';
+                }
+            } catch (error) {
+                console.error('Network error fetching user profile:', error);
+                alert('Network error. Please check if the backend is running.');
+                userName.textContent = 'Network Error';
+                userEmail.textContent = '';
+                userBio.textContent = '';
+                userInterestsContainer.innerHTML = '<span class="text-red-400">Network error.</span>';
+            }
+        });
+    </script>
+</body>
+</html>
