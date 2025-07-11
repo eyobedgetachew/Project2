@@ -1,0 +1,6 @@
+{
+    // specifies the mode for null analysis during java compilation
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.updateBuildConfiguration": "interactive"
+    // determines how build configuration updates are handled
+}
